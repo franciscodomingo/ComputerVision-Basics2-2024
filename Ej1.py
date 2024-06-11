@@ -168,9 +168,70 @@ plt.show()
 # RESISTENCIAS
 ########################################################################################################################
 
+placa_color = cv2.imread('placa.png', cv2.IMREAD_COLOR)
+imshow(placa_color)
+recorte = placa_color[830:2710,190:1800]
+imshow(recorte)
+
+img_preproc = preproc(recorte)
+imshow(img_preproc)
+
+_, thresh = cv2.threshold(img_preproc, 200, 255, cv2.THRESH_BINARY_INV)
+imshow(thresh, title='Imagen Umbralizada')
+
+cthresh = 255-thresh
+imshow(cthresh)
+
+# ---- Clausura (Closing) -----------------------
+A = cthresh
+B = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+Aclau = cv2.morphologyEx(A, cv2.MORPH_CLOSE, B, iterations=8)
+imshow(Aclau)
+
+##########
+# COMPONENTES CONEXAS
+##########
+
+num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(Aclau)
+imshow(labels)
 
 
+# Parámetros
+aspect_ratios = [0.3, 2.45, 4.5]
+margin_error = 0.3  # Margen de error
+min_area = 1800  # Área mínima para considerar el componente
 
+# Crear una copia de la imagen original para dibujar sobre ella
+output_img = recorte.copy()
+
+# Función para verificar si la relación de aspecto está dentro del margen de error
+def is_within_aspect_ratio(aspect_ratio, target_ratios, margin):
+    for ratio in target_ratios:
+        if abs(aspect_ratio - ratio) <= margin * ratio:
+            return True
+    return False
+
+# Dibujar rectángulos rojos alrededor de las componentes que cumplen con el criterio
+for i in range(1, num_labels):  # Saltamos el primer componente (fondo)
+    x, y, w, h, area = stats[i]
+    aspect_ratio = w / h if h != 0 else 0
+
+    if area > min_area and is_within_aspect_ratio(aspect_ratio, aspect_ratios, margin_error):
+        # Dibujar el rectángulo en rojo
+        cv2.rectangle(output_img, (x, y), (x + w, y + h), (0, 0, 255), 2)
+        # Dibujar el centroide en verde
+        centroid_x, centroid_y = centroids[i]
+        cv2.circle(output_img, (int(centroid_x), int(centroid_y)), 5, (0, 255, 0), -1)
+
+
+#imshow(labels)
+
+# Mostrar la imagen resultante
+plt.figure(figsize=(10, 10))
+plt.imshow(cv2.cvtColor(output_img, cv2.COLOR_BGR2RGB))
+plt.title('Componentes Conexas con Relación de Aspecto Específica y Área Mínima')
+plt.axis('off')
+plt.show()
 
 
 
@@ -265,7 +326,7 @@ num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(chip_rel
 imshow(img=labels)
 
 # Dibujar el rectángulo y el centroide
-output_image = cv2.cvtColor(placa_color, cv2.COLOR_GRAY2BGR)  # Convertir a BGR para poder dibujar en color
+output_image =placa_color.copy()
 
 # Obtener las estadísticas y el centroide de la etiqueta deseada
 x, y, w, h, area = stats[276]
