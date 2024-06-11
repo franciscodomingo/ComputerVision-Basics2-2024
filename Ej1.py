@@ -49,12 +49,6 @@ placa_color = cv2.imread('placa.png', cv2.IMREAD_COLOR)
 #imshow(placa_color, color_img=True)
 
 
-img_preproc = preproc(placa_color)
-imshow(img_preproc)
-
-
-_, thresh = cv2.threshold(img_preproc, 190, 255, cv2.THRESH_BINARY_INV)
-imshow(thresh, title='Imagen Umbralizada')
 
 
 
@@ -64,6 +58,11 @@ imshow(thresh, title='Imagen Umbralizada')
 ########################################################################################################################
 # CAPACITORES
 ########################################################################################################################
+img_preproc = preproc(placa_color)
+imshow(img_preproc)
+
+_, thresh = cv2.threshold(img_preproc, 190, 255, cv2.THRESH_BINARY_INV)
+imshow(thresh, title='Imagen Umbralizada')
 
 cthresh = 255 - thresh
 imshow(cthresh)
@@ -138,12 +137,21 @@ plt.figure(); plt.imshow(labeled_image); plt.show(block=False)
 # Crear una copia de la imagen original para dibujar sobre ella
 output_img = placa_color.copy()
 
+area_capacitores = {}
 # Dibujar rectángulos y marcar centroides
 for i in capacitores:
     # Obtener los datos del componente
     x, y, w, h, area = stats[i]
     cx, cy = centroids[i]
     
+    if area>100000:
+        area_capacitores[i]="muy grande"
+    elif area>40000:
+        area_capacitores[i]="grande"
+    elif area>13000:
+        area_capacitores[i]="mediano"
+    elif area>6500:
+        area_capacitores[i]="chico"
     # Dibujar el rectángulo en verde
     cv2.rectangle(output_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
     
@@ -157,6 +165,12 @@ plt.title('Imagen con Bounding Boxes y Centroides')
 plt.axis('off')
 plt.show()
 
+
+print(f"Se han encontrado {len(capacitores)} capacitores en la imagen.")
+print(f"Se han encontrado {sum(1 for valor in area_capacitores.values() if valor == 'muy grande')} capacitore(s) muy grande(s) en la imagen.")
+print(f"Se han encontrado {sum(1 for valor in area_capacitores.values() if valor == 'grande')} capacitore(s) grande(s) en la imagen.")
+print(f"Se han encontrado {sum(1 for valor in area_capacitores.values() if valor == 'mediano')} capacitore(s) mediano(s) en la imagen.")
+print(f"Se han encontrado {sum(1 for valor in area_capacitores.values() if valor == 'chico')} capacitore(s) chicos(s) en la imagen.")
 
 
 
@@ -211,12 +225,14 @@ def is_within_aspect_ratio(aspect_ratio, target_ratios, margin):
             return True
     return False
 
+resistencias = []
 # Dibujar rectángulos rojos alrededor de las componentes que cumplen con el criterio
 for i in range(1, num_labels):  # Saltamos el primer componente (fondo)
     x, y, w, h, area = stats[i]
     aspect_ratio = w / h if h != 0 else 0
 
     if area > min_area and is_within_aspect_ratio(aspect_ratio, aspect_ratios, margin_error):
+        resistencias.append(i)
         # Dibujar el rectángulo en rojo
         cv2.rectangle(output_img, (x, y), (x + w, y + h), (0, 0, 255), 2)
         # Dibujar el centroide en verde
@@ -235,7 +251,7 @@ plt.show()
 
 
 
-
+print(f"Se han encontrado {len(resistencias)} resistencias en la imagen.")
 
 
 
