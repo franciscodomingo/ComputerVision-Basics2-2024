@@ -694,3 +694,116 @@ plt.show()
 # (Canny). 
 ############
 
+
+
+
+
+############
+# PATENTES ENCONTRADAS 2.0
+############
+
+# Crear el plot para mostrar los recortes
+fig, axs = plt.subplots(3, 4, figsize=(12, 9))
+# Iterar sobre los recortes y mostrarlos en el plot
+for i, recorte in enumerate(patentes_encontradas):
+    fila = i // 4
+    columna = i % 4
+    axs[fila, columna].imshow(recorte, cmap='gray')
+    axs[fila, columna].axis('off')
+
+# Ajustar los márgenes del plot
+plt.tight_layout()
+plt.show()
+
+
+
+
+# Transformamos a escala de grises
+patentes_bw = []
+for imagen in patentes_encontradas:
+    patentes_bw.append(cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY))
+
+# Crear el plot para mostrar los recortes
+fig, axs = plt.subplots(3, 4, figsize=(12, 9))
+# Iterar sobre los recortes y mostrarlos en el plot
+for i, recorte in enumerate(patentes_bw):
+    fila = i // 4
+    columna = i % 4
+    axs[fila, columna].imshow(recorte, cmap='gray')
+    axs[fila, columna].axis('off')
+
+# Ajustar los márgenes del plot
+plt.tight_layout()
+plt.show()
+
+
+
+
+
+# Aplicar la saturación de los valores
+def saturar(img, min_val, max_val):
+    img_saturada = np.copy(img)
+    img_saturada[img < min_val] = min_val
+    img_saturada[img > max_val] = max_val
+    return img_saturada
+
+# Definir los valores mínimos y máximos
+min_val = 120
+max_val = 121
+
+patentes_bw_saturadas = []
+for imagen in patentes_bw:
+    # Saturar imagen
+    recorte_saturado = saturar(imagen, min_val, max_val)
+    
+    # Calcular el mínimo y el máximo de la imagen por si no coinciden
+    min_val = np.min(recorte_saturado)
+    max_val = np.max(recorte_saturado)
+    
+    # Expandir el contraste de la imagen
+    img_expandida = cv2.convertScaleAbs(recorte_saturado, alpha=255.0/(max_val - min_val), beta=-255.0*min_val/(max_val - min_val))
+    patentes_bw_saturadas.append(img_expandida)
+
+
+# Crear el plot para mostrar los recortes
+fig, axs = plt.subplots(3, 4, figsize=(12, 9))
+for i, recorte in enumerate(patentes_bw_saturadas):
+    fila = i // 4
+    columna = i % 4
+    axs[fila, columna].imshow(recorte, cmap='gray')
+    axs[fila, columna].axis('off')
+plt.tight_layout()
+plt.show()
+
+
+
+# Dibujar un recuadro verde alrededor de las componentes conexas con relación de aspecto 2
+def dibujar_recuadros(img):
+    # Encontrar componentes conexas
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(img, connectivity=4)
+    
+    # Crear una imagen en color para dibujar los recuadros
+    img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    
+    for i in range(1, num_labels):  # Ignorar la etiqueta de fondo (i = 0)
+        x, y, w, h, area = stats[i]
+        aspect_ratio = h / w
+        if h <= 20 and h>8 and 1.2 <= aspect_ratio < 2.3:
+            # Dibujar un recuadro verde con grosor de línea más pequeño (por ejemplo, 1)
+            cv2.rectangle(img_color, (x, y), (x + w, y + h), (0, 255, 0), 1)
+    
+    return img_color
+
+# Crear el plot para mostrar los recortes con recuadros
+fig, axs = plt.subplots(3, 4, figsize=(12, 9))
+# Iterar sobre los recortes y mostrarlos en el plot
+for i, recorte in enumerate(patentes_bw_saturadas):
+    recorte_con_recuadros = dibujar_recuadros(recorte)
+    fila = i // 4
+    columna = i % 4
+    axs[fila, columna].imshow(cv2.cvtColor(recorte_con_recuadros, cv2.COLOR_BGR2RGB))
+    axs[fila, columna].axis('off')
+
+# Ajustar los márgenes del plot
+plt.tight_layout()
+plt.show()
