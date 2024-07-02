@@ -699,7 +699,7 @@ plt.show()
 
 
 ############
-# PATENTES ENCONTRADAS 2.0
+# Segmentación de letras 2.0
 ############
 
 # Crear el plot para mostrar los recortes
@@ -788,7 +788,7 @@ def dibujar_recuadros(img):
     for i in range(1, num_labels):  # Ignorar la etiqueta de fondo (i = 0)
         x, y, w, h, area = stats[i]
         aspect_ratio = h / w
-        if h <= 20 and h>8 and 1.2 <= aspect_ratio < 2.3:
+        if h <= 24 and h>8 and 1.15 <= aspect_ratio < 2.5:
             # Dibujar un recuadro verde con grosor de línea más pequeño (por ejemplo, 1)
             cv2.rectangle(img_color, (x, y), (x + w, y + h), (0, 255, 0), 1)
     
