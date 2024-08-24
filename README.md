@@ -14,6 +14,8 @@ This repository contains two Python scripts designed to process and analyze PNG 
 
 ## **Execution:** ##
 
+It is recommended to use a step-by-step execution of the script because of the amount of graphs.
+
 To use `pdf2image` (necessary for TP_2) in Visual Studio Code, you need to install **Anaconda**.
 Set it as the interpreter in Visual Studio Code.
 Then, run the following command:
